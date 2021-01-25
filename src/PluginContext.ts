@@ -1,6 +1,6 @@
 import PluginAbstract from "./PluginAbstract";
 
-export default class PluginContext {
+export class PluginContext {
     constructor(private plugin: PluginAbstract, public readonly ctx: string) {
     }
 

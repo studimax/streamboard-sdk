@@ -1,7 +1,7 @@
 import {parentPort} from "worker_threads";
 import {EventEmitter} from "events";
-import PluginContext from "./PluginContext";
 import {EventName} from "./EventName";
+import {PluginContext} from "./PluginContext";
 
 export default abstract class PluginAbstract {
     private event = new EventEmitter();

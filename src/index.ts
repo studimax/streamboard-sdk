@@ -1,3 +1,5 @@
-export * as PluginContext from "./PluginContext";
-export * as PluginAbstract from "./PluginAbstract";
+import PluginAbstract from "./PluginAbstract";
+
+export default PluginAbstract;
+export {PluginContext} from "./PluginContext";
 export {EventName} from "./EventName";
