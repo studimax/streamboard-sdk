@@ -1,4 +1,4 @@
-import PluginAbstract from "../../../src";
+import PluginAbstract, {EventName} from "../../../src/index";
 
 class SimplePlugin extends PluginAbstract {
     constructor() {
@@ -7,10 +7,21 @@ class SimplePlugin extends PluginAbstract {
 
     protected async init(): Promise<void> {
         console.log("plugin connected");
+        this.on("connected", context => {
+            let i = 0;
+            context.setText("...");
+            context.setColor("#1452bc");
+            context.on(EventName.CLICK, () => {
+                if (++i % 2 == 0) {
+                    context.setText("Hello");
+                    context.setColor("#14bc30");
+                } else {
+                    context.setText("World");
+                    context.setColor("#cf0000");
+                }
+            });
+        });
     }
 }
 
-const p = new SimplePlugin();
-p.on("connected", async context => {
-    const settings = await context.getSettings();
-})
+new SimplePlugin();

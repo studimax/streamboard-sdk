@@ -103,5 +103,11 @@ typings/
 .tern-port
 
 .idea
+test
+.github
+.eslint
+.eslintignore
+*.ts
+!*.d.ts
 
 test/
