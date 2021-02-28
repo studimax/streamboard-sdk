@@ -1,16 +1,16 @@
 {
   "name": "streamboard-sdk",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "StreamBoard SDK is an SDK to create plugin for the Stream Board",
-  "main": "./dist/index.js",
+  "main": "./src/index.js",
   "scripts": {
     "build": "tsc",
     "serve": "ts-node ./src/index.ts",
-    "test": "ts-node ./test/index.ts",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint ./src --ext .ts"
   },
   "devDependencies": {
     "@types/node": "^14.14.22",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.14.0",
     "@typescript-eslint/parser": "^4.14.0",
     "eslint": "^7.18.0",
@@ -31,5 +31,8 @@
   "bugs": {
     "url": "https://github.com/studimax/streamboard-sdk/issues"
   },
-  "homepage": "https://github.com/studimax/streamboard-sdk#readme"
+  "homepage": "https://github.com/studimax/streamboard-sdk#readme",
+  "dependencies": {
+    "uuid": "^8.3.2"
+  }
 }

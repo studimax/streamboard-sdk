@@ -102,6 +102,5 @@ typings/
 # TernJS port file
 .tern-port
 
-.idea
-
-test/
+/dist
+/package
