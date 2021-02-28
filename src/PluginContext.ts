@@ -58,7 +58,7 @@ export class PluginContext {
         return new Promise((resolve) => {
             const requestUuid = uuid.v4();
             this.request.once(requestUuid, resolve);
-            PluginAbstract.send({
+            this.plugin.send({
                 event,
                 ctx: this.uuid,
                 payload,

@@ -17,16 +17,22 @@ export interface ResponseData<T = any> {
     responseUuid?: string;
 }
 
+export interface MessagePort {
+    postMessage(value: any): void;
+
+    on(event: "message", listener: (value: any) => void): any;
+}
+
 export default abstract class PluginAbstract {
+    protected parent: MessagePort | null = parentPort;
     private event = new EventEmitter();
     private request = new EventEmitter();
     private contextEvent = new EventEmitter();
-
-    private contexts: Map<string, PluginContext> = new Map<string, PluginContext>()
+    private contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
 
     protected constructor() {
         this.init().then(() => {
-            parentPort?.on("message", (responseData: ResponseData) => {
+            this.parent?.on("message", (responseData: ResponseData) => {
                 const {responseUuid, event, ctx, payload} = responseData;
                 this.event.emit("*", responseData);
 
@@ -49,8 +55,8 @@ export default abstract class PluginAbstract {
         });
     }
 
-    public static send(requestData: RequestData): void {
-        parentPort?.postMessage(requestData);
+    public send(requestData: RequestData): void {
+        this.parent?.postMessage(requestData);
     }
 
     /**
@@ -60,7 +66,7 @@ export default abstract class PluginAbstract {
      * @param payload {any}
      */
     public emit(event: string, ctx?: string, payload?: any): this {
-        PluginAbstract.send({
+        this.send({
             event,
             ctx,
             payload
@@ -79,7 +85,7 @@ export default abstract class PluginAbstract {
         return new Promise((resolve) => {
             const requestUuid = uuid.v4();
             this.request.once(requestUuid, resolve);
-            PluginAbstract.send({
+            this.send({
                 event,
                 ctx,
                 payload,
