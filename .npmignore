@@ -106,6 +106,7 @@ typings/
 test
 .github
 .eslint
+.eslintrc
 .eslintignore
 *.ts
 !*.d.ts
