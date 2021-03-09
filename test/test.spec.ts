@@ -34,7 +34,8 @@ describe("TestPlugin", () => {
             const uuid = v4();
             plugin.on("connected", context => {
                 expect(context.uuid).to.equal(uuid);
-                expect(context.config.action).to.equal("test");
+                expect(context.action).to.equal("test");
+                expect(context.config.hello).to.equal("world");
                 done();
             });
 
@@ -42,7 +43,10 @@ describe("TestPlugin", () => {
                 ctx: uuid,
                 event: "connected",
                 payload: {
-                    action: "test"
+                    action: "test",
+                    config: {
+                        hello: "world"
+                    }
                 }
             });
         });

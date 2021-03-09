@@ -3,10 +3,11 @@ import {EventEmitter} from "events";
 import * as uuid from "uuid";
 
 export class PluginContext {
+    public readonly cache: { [key: string]: any } = {};
     private event = new EventEmitter();
     private request = new EventEmitter();
 
-    constructor(private plugin: PluginAbstract, public readonly uuid: string, public readonly config: any) {
+    constructor(private plugin: PluginAbstract, public readonly uuid: string, public readonly action: string, public readonly config: any) {
         plugin.onContext(uuid, (responseData: ResponseData) => {
             const {responseUuid, event} = responseData;
             this.event.emit("*", responseData);

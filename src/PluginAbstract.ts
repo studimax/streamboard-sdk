@@ -38,7 +38,8 @@ export default abstract class PluginAbstract {
 
                 if (ctx && uuid.validate(ctx)) {
                     if (!this.contexts.has(ctx)) {
-                        const context = new PluginContext(this, ctx, payload);
+                        const {action, config} = payload;
+                        const context = new PluginContext(this, ctx, action, config);
                         this.contexts.set(ctx, context);
                         this.event.emit("connected", context);
                     }
@@ -109,8 +110,9 @@ export default abstract class PluginAbstract {
         return this.contextEvent.on(ctx, listener);
     }
 
-    public getAllContexts(): PluginContext[] {
-        return Array.from(this.contexts.values());
+    public getAllContexts(action?: string): PluginContext[] {
+        const array = Array.from(this.contexts.values());
+        return action ? array.filter(context => context.action === action) : array;
     }
 
     public stop() {
