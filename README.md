@@ -10,14 +10,21 @@ The SDK is helpful to develop some plugins as easy as possible and as fast as po
 
     $ npm install streamboard-sdk
 
-And then you can extend your Plugin class with PluginAbstract
+And then you can use the sdk like this example
+
+    import StreamBoardSDK from "stremboard-sdk";
     
-    import PluginAbstract from "streamboard-sdk";
-    class SimplePlugin extends PluginAbstract {
-        constructor(){
-            super();
-        }
-    }
+    const sdk = new StreamBoardSDK();
+
+    sdk.onConnexion(context => {
+        context.setText("Hello");
+        context.setColor("#1452bc");
+        context.onClick(() => {
+            context.setText("World");
+            context.setColor("#14bc30");
+        });
+    });
+
 
 #### Done
 

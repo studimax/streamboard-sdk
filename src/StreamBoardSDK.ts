@@ -97,10 +97,14 @@ export default class StreamBoardSDK {
      * @param event
      * @param listener
      */
-    public on(event: "connected", listener: (context: PluginContext) => void): any;
-    public on(event: string | "*", listener: (context: ResponseData) => void): any;
-    public on(event: string, listener: (...args: any) => void): any {
+    public on(event: "connected", listener: (context: PluginContext) => void): EventEmitter;
+    public on(event: string | "*", listener: (context: ResponseData) => void): EventEmitter;
+    public on(event: string, listener: (...args: any) => void): EventEmitter {
         return this.event.on(event, listener);
+    }
+
+    public onConnection(listener: (context: PluginContext) => void): EventEmitter {
+        return this.on("connected", listener);
     }
 
     public onContext(ctx: string, listener: (responseData: ResponseData) => void): any {

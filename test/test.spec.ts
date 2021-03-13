@@ -23,7 +23,7 @@ describe("TestPlugin", () => {
 
         it("should get received click event", (done) => {
             const uuid = v4();
-            sdk.on("connected", context => {
+            sdk.onConnection(context => {
                 context.onClick(response => {
                     expect(response.payload).to.equal(true);
                     done();
@@ -49,7 +49,7 @@ describe("TestPlugin", () => {
 
         it("verify context", (done) => {
             const uuid = v4();
-            sdk.on("connected", context => {
+            sdk.onConnection(context => {
                 expect(context.uuid).to.equal(uuid);
                 expect(context.action).to.equal("test");
                 expect(context.config.hello).to.equal("world");
