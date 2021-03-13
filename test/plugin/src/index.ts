@@ -1,27 +1,19 @@
-import PluginAbstract, {EventName} from "../../../src/index";
+import StreamBoardSDK from "../../../src/index";
 
-class SimplePlugin extends PluginAbstract {
-    constructor() {
-        super();
-    }
+const sdk = new StreamBoardSDK();
 
-    protected async init(): Promise<void> {
-        console.log("plugin connected");
-        this.on("connected", context => {
-            let i = 0;
-            context.setText("...");
-            context.setColor("#1452bc");
-            context.on(EventName.CLICK, () => {
-                if (++i % 2 == 0) {
-                    context.setText("Hello");
-                    context.setColor("#14bc30");
-                } else {
-                    context.setText("World");
-                    context.setColor("#cf0000");
-                }
-            });
-        });
-    }
-}
-
-new SimplePlugin();
+console.log("plugin connected");
+sdk.on("connected", context => {
+    let i = 0;
+    context.setText("...");
+    context.setColor("#1452bc");
+    context.onClick(() => {
+        if (++i % 2 == 0) {
+            context.setText("Hello");
+            context.setColor("#14bc30");
+        } else {
+            context.setText("World");
+            context.setColor("#cf0000");
+        }
+    });
+});

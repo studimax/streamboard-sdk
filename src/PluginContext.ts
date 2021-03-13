@@ -1,13 +1,13 @@
-import PluginAbstract, {ResponseData} from "./PluginAbstract";
-import {EventEmitter} from "events";
 import * as uuid from "uuid";
+import StreamBoardSDK, {ResponseData} from "./StreamBoardSDK";
+import {EventEmitter} from "events";
 
 export class PluginContext {
     public readonly cache: { [key: string]: any } = {};
     private event = new EventEmitter();
     private request = new EventEmitter();
 
-    constructor(private plugin: PluginAbstract, public readonly uuid: string, public readonly action: string, public readonly config: any) {
+    constructor(private plugin: StreamBoardSDK, public readonly uuid: string, public readonly action: string, public readonly config: any) {
         plugin.onContext(uuid, (responseData: ResponseData) => {
             const {responseUuid, event} = responseData;
             this.event.emit("*", responseData);
@@ -27,16 +27,38 @@ export class PluginContext {
         this.emit("setSettings", value)
     }
 
+    /**
+     * Send a request to set the icon's text
+     * @param value
+     */
     public setText(value: string): void {
         this.emit("setText", value)
     }
 
+    /**
+     * Send a request to set the icon's image
+     * @param value
+     */
     public setImage(value: string): void {
         this.emit("setImage", value)
     }
 
+    /**
+     * Send a request to set the icon's color
+     * @param value
+     */
     public setColor(value: string): void {
         this.emit("setColor", value)
+    }
+
+    /**
+     * Send an audio play request to the app
+     * @param path
+     */
+    public playSound(path: string): void {
+        this.emit("playSound", {
+            file: path
+        })
     }
 
     /**
@@ -44,7 +66,7 @@ export class PluginContext {
      * @param event {string}
      * @param payload {any}
      */
-    public emit(event: string, payload?: any): PluginAbstract {
+    public emit(event: string, payload?: any): StreamBoardSDK {
         return this.plugin.emit(event, this.uuid, payload);
     }
 
@@ -73,8 +95,16 @@ export class PluginContext {
      * @param event
      * @param listener
      */
-    public on(event: string | "*", listener: (response: ResponseData) => void): any {
+    public on(event: string | "*" | "click", listener: (response: ResponseData) => void): any {
         return this.event.on(event, listener);
+    }
+
+    /**
+     * Listens to click event, when a event arrives listener would be called with listener(response).
+     * @param listener
+     */
+    public onClick(listener: (response: ResponseData) => void): any {
+        return this.on("click", listener)
     }
 
     /**

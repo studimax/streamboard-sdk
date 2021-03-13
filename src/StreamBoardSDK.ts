@@ -1,7 +1,7 @@
-import {parentPort} from "worker_threads";
-import {EventEmitter} from "events";
 import * as uuid from "uuid";
+import {EventEmitter} from "events";
 import {PluginContext} from "./PluginContext";
+import {parentPort} from "worker_threads";
 
 export interface RequestData<T = any> {
     event: string;
@@ -23,41 +23,38 @@ export interface MessagePort {
     on(event: "message", listener: (value: any) => void): any;
 }
 
-export default abstract class PluginAbstract {
-    protected parent: MessagePort | null = parentPort;
-    private event = new EventEmitter();
-    private request = new EventEmitter();
-    private contextEvent = new EventEmitter();
-    private contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
+export default class StreamBoardSDK {
+    private readonly event = new EventEmitter();
+    private readonly request = new EventEmitter();
+    private readonly contextEvent = new EventEmitter();
+    private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
 
-    protected constructor() {
-        this.init().then(() => {
-            this.parent?.on("message", (responseData: ResponseData) => {
-                const {responseUuid, event, ctx, payload} = responseData;
-                this.event.emit("*", responseData);
+    constructor(private readonly messagePort: MessagePort | null = parentPort) {
+        this.messagePort?.on("message", (responseData: ResponseData) => {
+            const {responseUuid, event, ctx, payload} = responseData;
+            this.event.emit("*", responseData);
 
-                if (ctx && uuid.validate(ctx)) {
-                    if (!this.contexts.has(ctx)) {
-                        const {action, config} = payload;
-                        const context = new PluginContext(this, ctx, action, config);
-                        this.contexts.set(ctx, context);
-                        this.event.emit("connected", context);
-                    }
-                    this.contextEvent.emit(ctx, responseData);
-                } else {
-                    if (responseUuid) {
-                        this.request.emit(responseUuid, responseData);
-                    } else {
-                        this.event.emit(event, responseData);
-                    }
+            if (ctx && uuid.validate(ctx)) {
+                if (!this.contexts.has(ctx) && event == "connected") {
+                    const {action, config} = payload;
+                    const context = new PluginContext(this, ctx, action, config);
+                    this.contexts.set(ctx, context);
+                    this.event.emit("connected", context);
                 }
+                if (this.contexts.has(ctx)) this.contextEvent.emit(ctx, responseData);
+            } else {
+                if (responseUuid) {
+                    this.request.emit(responseUuid, responseData);
+                } else {
+                    this.event.emit(event, responseData);
+                }
+            }
 
-            });
         });
     }
 
     public send(requestData: RequestData): void {
-        this.parent?.postMessage(requestData);
+        this.messagePort?.postMessage(requestData);
     }
 
     /**
@@ -117,9 +114,5 @@ export default abstract class PluginAbstract {
 
     public stop() {
         this.contexts.forEach(c => c.stop());
-    }
-
-    protected async init(): Promise<void> {
-        return;
     }
 }

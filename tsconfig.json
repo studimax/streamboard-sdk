@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "esNext",
-    "sourceMap": true,
+    "sourceMap": false,
     "esModuleInterop": true,
     "strict": true,
     "noUnusedLocals": true,

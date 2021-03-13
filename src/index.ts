@@ -1,5 +1,4 @@
-import PluginAbstract from "./PluginAbstract";
+import StreamBoardSDK from "./StreamBoardSDK";
 
-export default PluginAbstract;
+export default StreamBoardSDK;
 export {PluginContext} from "./PluginContext";
-export {EventName} from "./Constant";

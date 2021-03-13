@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "serve": "ts-node ./src/index.ts",
-    "lint": "eslint ./src --ext .ts",
+    "lint": "eslint ./src --ext .ts --fix",
     "test": "mocha"
   },
   "devDependencies": {
