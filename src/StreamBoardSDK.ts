@@ -6,7 +6,7 @@ import {parentPort} from "worker_threads";
 export interface RequestData<T = any> {
     event: string;
     ctx?: string;
-    payload: T;
+    payload?: T;
     requestUuid?: string;
 }
 
@@ -35,13 +35,13 @@ export default class StreamBoardSDK {
             this.event.emit("*", responseData);
 
             if (ctx && uuid.validate(ctx)) {
-                if (!this.contexts.has(ctx) && event == "connected") {
+                if (this.contexts.has(ctx)) this.contextEvent.emit(ctx, responseData);
+                else if (event == "connected") {
                     const {action, config} = payload;
                     const context = new PluginContext(this, ctx, action, config);
                     this.contexts.set(ctx, context);
                     this.event.emit("connected", context);
                 }
-                if (this.contexts.has(ctx)) this.contextEvent.emit(ctx, responseData);
             } else {
                 if (responseUuid) {
                     this.request.emit(responseUuid, responseData);
@@ -53,8 +53,11 @@ export default class StreamBoardSDK {
         });
     }
 
-    public send(requestData: RequestData): void {
-        this.messagePort?.postMessage(requestData);
+    /**
+     * Send to the main process that the plugin is ready
+     */
+    public async ready(): Promise<boolean> {
+        return (await this.invoke<boolean>("ready")).payload;
     }
 
     /**
@@ -98,7 +101,9 @@ export default class StreamBoardSDK {
      * @param listener
      */
     public on(event: "connected", listener: (context: PluginContext) => void): EventEmitter;
+
     public on(event: string | "*", listener: (context: ResponseData) => void): EventEmitter;
+
     public on(event: string, listener: (...args: any) => void): EventEmitter {
         return this.event.on(event, listener);
     }
@@ -118,5 +123,9 @@ export default class StreamBoardSDK {
 
     public stop() {
         this.contexts.forEach(c => c.stop());
+    }
+
+    send(requestData: RequestData): void {
+        this.messagePort?.postMessage(requestData);
     }
 }

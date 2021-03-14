@@ -1,6 +1,6 @@
 {
   "name": "streamboard-sdk",
-  "version": "1.2.1",
+  "version": "1.3.0-beta.0",
   "description": "StreamBoard SDK is an SDK to create plugin for the Stream Board",
   "main": "./src/index.js",
   "scripts": {

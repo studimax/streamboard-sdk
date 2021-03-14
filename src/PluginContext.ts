@@ -107,6 +107,12 @@ export class PluginContext {
         return this.on("click", listener)
     }
 
+    public onSettings(listener: () => any | Promise<any>): any {
+        this.on("settings", async response => {
+            this.emit("settings", await listener());
+        })
+    }
+
     /**
      * @todo need to implement this method
      */
