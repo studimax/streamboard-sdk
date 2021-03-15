@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import {EventEmitter} from "events";
 import {PluginContext} from "./PluginContext";
-import {parentPort} from "worker_threads";
+import {ipcRenderer} from "electron";
 
 export interface RequestData<T = any> {
     event: string;
@@ -17,20 +17,14 @@ export interface ResponseData<T = any> {
     responseUuid?: string;
 }
 
-export interface MessagePort {
-    postMessage(value: any): void;
-
-    on(event: "message", listener: (value: any) => void): any;
-}
-
 export default class StreamBoardSDK {
     private readonly event = new EventEmitter();
     private readonly request = new EventEmitter();
     private readonly contextEvent = new EventEmitter();
     private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
 
-    constructor(private readonly messagePort: MessagePort | null = parentPort) {
-        this.messagePort?.on("message", (responseData: ResponseData) => {
+    constructor() {
+        ipcRenderer?.on("plugin", (e, responseData: ResponseData) => {
             const {responseUuid, event, ctx, payload} = responseData;
             this.event.emit("*", responseData);
 
@@ -126,6 +120,6 @@ export default class StreamBoardSDK {
     }
 
     send(requestData: RequestData): void {
-        this.messagePort?.postMessage(requestData);
+        ipcRenderer.send("plugin", requestData);
     }
 }
