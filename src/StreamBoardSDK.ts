@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import {EventEmitter} from "events";
 import {PluginContext} from "./PluginContext";
-import {ipcRenderer} from "electron";
+import {ipcRenderer, remote} from "electron";
 
 export interface RequestData<T = any> {
     event: string;
@@ -22,9 +22,11 @@ export default class StreamBoardSDK {
     private readonly request = new EventEmitter();
     private readonly contextEvent = new EventEmitter();
     private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
+    private readonly identifier = new URL(location.toString()).searchParams.get("identifier") ?? ""
 
     constructor() {
-        ipcRenderer?.on("plugin", (e, responseData: ResponseData) => {
+        if (!this.identifier) remote.getCurrentWindow().close();
+        ipcRenderer?.on(this.identifier, (e, responseData: ResponseData) => {
             const {responseUuid, event, ctx, payload} = responseData;
             this.event.emit("*", responseData);
 
@@ -120,6 +122,6 @@ export default class StreamBoardSDK {
     }
 
     send(requestData: RequestData): void {
-        ipcRenderer.send("plugin", requestData);
+        ipcRenderer.send(this.identifier, requestData);
     }
 }
