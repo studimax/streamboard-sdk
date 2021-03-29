@@ -1,4 +1,5 @@
 {
+  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "module": "commonjs",
     "target": "esNext",
@@ -12,7 +13,8 @@
     "moduleResolution": "node",
     "types": [
       "node", "mocha"
-    ]
+    ],
+    "lib": ["dom"]
   },
   "exclude": [
     "test",

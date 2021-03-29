@@ -1,4 +1,4 @@
-import StreamBoardSDK from "./StreamBoardSDK";
+import StreamBoardSDK from './StreamBoardSDK';
 
 export default StreamBoardSDK;
-export {PluginContext} from "./PluginContext";
+export {PluginContext} from './PluginContext';
