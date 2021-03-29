@@ -16,7 +16,7 @@ OR
 $ yarn add streamboard-sdk
 ```
 
-##Example
+## Example
 Then you can use the sdk like this example
 
 ```js
@@ -33,7 +33,7 @@ sdk.onConnexion(context => {
     });
 });
 ```
-###Package.json
+### Package.json
 The plugin need a valid package.json with this minimum configuration:
 ```json
 {
@@ -54,7 +54,7 @@ The plugin need a valid package.json with this minimum configuration:
 }
 ```
 
-###Context
+### Context
 The plugin is executed one time on the StreamBoard, so there is only one instance of the plugin.
 That's why we need to use context. Context is an instance of a plugin's action declared in package.json.
 
