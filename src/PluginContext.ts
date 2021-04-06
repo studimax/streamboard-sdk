@@ -1,35 +1,30 @@
-import * as uuid from 'uuid';
-import StreamBoardSDK, {ResponseData} from './StreamBoardSDK';
-import {EventEmitter} from 'events';
+import IPC from "./IPC";
 
-export class PluginContext {
+export class PluginContext extends IPC{
   public readonly cache: {[key: string]: any} = {};
-  private event = new EventEmitter();
-  private request = new EventEmitter();
 
   constructor(
-    private plugin: StreamBoardSDK,
     public readonly uuid: string,
     public readonly action: string,
     public readonly config: any
   ) {
-    plugin.onContext(uuid, (responseData: ResponseData) => {
-      const {responseUuid, event} = responseData;
-      this.event.emit('*', responseData);
-      if (responseUuid) {
-        this.request.emit(responseUuid, responseData);
-      } else {
-        this.event.emit(event, responseData);
-      }
-    });
+    super();
   }
 
-  public async getSettings(): Promise<any> {
-    return (await this.invoke('getSettings')).payload;
+  protected emit(channel: string, requestId: any, ...args: any[]): void {
+    return super.emit(channel,requestId,this.uuid,...args);
+  }
+
+  protected isValidRequest(event: any, handleId: any, context:string, ...args: any[]): boolean {
+    return context === this.uuid && super.isValidRequest(event, handleId, ...args);
+  }
+
+  public getSettings(): Promise<any> {
+    return this.invoke('getSettings');
   }
 
   public setSettings(value: any): void {
-    this.emit('setSettings', value);
+    this.send('setSettings', value);
   }
 
   /**
@@ -37,7 +32,7 @@ export class PluginContext {
    * @param value
    */
   public setText(value: string): void {
-    this.emit('setText', value);
+    this.send('setText', value);
   }
 
   /**
@@ -45,7 +40,7 @@ export class PluginContext {
    * @param value
    */
   public setImage(value: string): void {
-    this.emit('setImage', value);
+    this.send('setImage', value);
   }
 
   /**
@@ -53,81 +48,30 @@ export class PluginContext {
    * @param value
    */
   public setColor(value: string): void {
-    this.emit('setColor', value);
+    this.send('setColor', value);
   }
 
   /**
-   * Send an audio play request to the app
-   * @param path
-   */
-  public playSound(path: string): void {
-    this.emit('playSound', {
-      file: path,
-    });
-  }
-
-  /**
-   * Send an asynchronous message to the main process, along with arguments.
-   * @param event {string}
-   * @param payload {any}
-   */
-  public emit(event: string, payload?: any): StreamBoardSDK {
-    return this.plugin.emit(event, this.uuid, payload);
-  }
-
-  /**
-   * Send a message to the main process and expect a result asynchronously.
-   * @param event
-   * @param ctx
-   * @param payload
-   * @return Promise<ResponseData>
-   */
-  public invoke<T = any>(
-    event: string,
-    payload?: any
-  ): Promise<ResponseData<T>> {
-    return new Promise(resolve => {
-      const requestUuid = uuid.v4();
-      this.request.once(requestUuid, resolve);
-      this.plugin.send({
-        event,
-        ctx: this.uuid,
-        payload,
-        requestUuid,
-      });
-    });
-  }
-
-  /**
-   * Listens to event, when a new message arrives listener would be called with listener(response).
-   * @param event
+   * Listens to pressDown event, when a event arrives listener would be called with listener.
    * @param listener
    */
-  public on(
-    event: string | '*' | 'click',
-    listener: (response: ResponseData) => void
-  ): any {
-    return this.event.on(event, listener);
+  public onPressDown(listener: () => void): any {
+    return this.on('pressDown',listener);
   }
 
   /**
-   * Listens to click event, when a event arrives listener would be called with listener(response).
+   * Listens to pressUp event, when a event arrives listener would be called with listener.
    * @param listener
    */
-  public onClick(listener: (response: ResponseData) => void): any {
-    return this.on('click', listener);
+  public onPressUp(listener: (response:{pressDuration:number}) => void): any {
+    return this.on('pressDown',listener);
   }
 
-  public onSettings(listener: (response: ResponseData) => any): any {
-    this.on('settings', async response => {
-      this.emit('settings', await listener(response));
-    });
+  public onSettings(listener: (response: any) => any): any {
+    return this.on('settings',listener);
   }
 
-  /**
-   * @todo need to implement this method
-   */
-  public async stop(): Promise<boolean> {
-    return (await this.invoke<boolean>('stop')).payload;
+  public stop(): Promise<boolean> {
+    return this.invoke<boolean>('stop');
   }
 }

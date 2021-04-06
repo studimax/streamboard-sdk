@@ -4,16 +4,13 @@
   "description": "StreamBoard SDK is an SDK to create plugin for the Stream Board",
   "main": "./src/index.js",
   "scripts": {
-    "build": "tsc",
-    "serve": "ts-node ./src/index.ts",
-    "lint": "eslint ./src --ext .ts --fix",
-    "test": "mocha",
+    "serve": "ts-node src/bin/index.ts",
+    "lint": "gts lint",
+    "prepare": "yarn run compile",
     "clean": "gts clean",
     "compile": "tsc",
-    "fix": "gts fix",
-    "prepare": "npm.cmd run compile",
-    "pretest": "npm.cmd run compile",
-    "posttest": "npm.cmd run lint"
+    "fix": "gts fix **/*.ts",
+    "test": "nyc mocha"
   },
   "devDependencies": {
     "@types/chai": "^4.2.15",
@@ -27,6 +24,7 @@
     "eslint": "^7.18.0",
     "gts": "^3.1.0",
     "mocha": "^8.3.0",
+    "nyc": "^15.1.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
   },

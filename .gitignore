@@ -6,8 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 build/Release
-node_modules/
-jspm_packages/
+node_modules
+jspm_packages
 *.tsbuildinfo
 .npm
 .eslintcache
@@ -20,3 +20,4 @@ jspm_packages/
 src/**/*.js
 src/**/*.map
 src/**/*.d.ts
+/.nyc_output/
