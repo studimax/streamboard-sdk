@@ -1,4 +1,4 @@
-import IPC from "./IPC";
+import IPC, {IpcHeaders} from "./IPC";
 
 export class PluginContext extends IPC{
   public readonly cache: {[key: string]: any} = {};
@@ -11,12 +11,19 @@ export class PluginContext extends IPC{
     super();
   }
 
-  protected emit(channel: string, requestId: any, ...args: any[]): void {
-    return super.emit(channel,requestId,this.uuid,...args);
+  protected emit(channel: string, headers: IpcHeaders, ...args: any[]) {
+    super.emit(channel, {...headers, ctxUuid: this.uuid}, ...args);
   }
 
-  protected isValidRequest(event: any, handleId: any, context:string, ...args: any[]): boolean {
-    return context === this.uuid && super.isValidRequest(event, handleId, ...args);
+  protected isValidRequest(
+      event: any,
+      headers: IpcHeaders,
+      ...args: any[]
+  ): boolean {
+    return (
+        headers.ctxUuid === this.uuid &&
+        super.isValidRequest(event, headers, ...args)
+    );
   }
 
   public getSettings(): Promise<any> {

@@ -10,21 +10,22 @@ import * as uuid from 'uuid';
 export type IpcEvent = IpcMainEvent | IpcRendererEvent;
 export type HandleListener = (...args: any[]) => Promise<any> | any;
 export type Listener = (...args: any[]) => any;
+export type IpcHeaders = {[key: string]: any};
 
 export default class IPC {
   private handleMap = new Map<string, HandleListener>();
   private eventMap = new Map<string, Listener[][]>();
   private ipc: Electron.IpcRenderer | Electron.IpcMain;
 
-  constructor(private win?: BrowserWindow) {
+  constructor(public win?: BrowserWindow) {
     this.ipc = ipcMain ?? ipcRenderer;
   }
 
-  protected emit(channel: string, requestId: any, ...args: any[]) {
+  protected emit(channel: string, headers: IpcHeaders, ...args: any[]) {
     if (this.win) {
-      this.win.webContents.send(channel, requestId, ...args);
+      this.win.webContents.send(channel, headers, ...args);
     } else if (ipcRenderer) {
-      ipcRenderer.send(channel, requestId, ...args);
+      ipcRenderer.send(channel, headers, ...args);
     } else {
       throw new Error('Message not send');
     }
@@ -35,10 +36,14 @@ export default class IPC {
   }
 
   public send(channel: string, ...args: any[]) {
-    this.emit(channel, null, ...args);
+    this.emit(channel, {}, ...args);
   }
 
-  protected isValidRequest(event: any, handleId: any, ...args: any[]): boolean {
+  protected isValidRequest(
+      event: any,
+      headers: IpcHeaders,
+      ...args: any[]
+  ): boolean {
     return (
         !this.win ||
         !event.sender?.id ||
@@ -47,8 +52,8 @@ export default class IPC {
   }
 
   public on(channel: string, listener: Listener) {
-    const func = (event: IpcEvent, handleId: any, ...args: any[]) => {
-      if (this.isValidRequest(event, handleId, ...args)) listener(...args);
+    const func = (event: IpcEvent, headers: IpcHeaders, ...args: any[]) => {
+      if (this.isValidRequest(event, headers, ...args)) listener(...args);
     };
     this.eventMap.set(channel, [
       ...(this.eventMap.get(channel) ?? []),
@@ -58,8 +63,8 @@ export default class IPC {
   }
 
   public once(channel: string, listener: Listener) {
-    const func = (event: IpcEvent, handleId: any, ...args: any[]) => {
-      if (!this.isValidRequest(event, handleId, ...args)) return;
+    const func = (event: IpcEvent, headers: IpcHeaders, ...args: any[]) => {
+      if (!this.isValidRequest(event, headers, ...args)) return;
       this.ipc.removeListener(channel, func);
       listener(...args);
     };
@@ -76,9 +81,14 @@ export default class IPC {
           `Attempted to register a second handler for '${channel}'`
       );
     }
-    const func = async (event: IpcEvent, handleId: any, ...args: any[]) => {
-      if (!this.isValidRequest(event, handleId, ...args)) return;
-      this.emit(`${channel}-${handleId}`, handleId, await listener(...args));
+    const func = async (
+        event: IpcEvent,
+        headers: IpcHeaders,
+        ...args: any[]
+    ) => {
+      if (!this.isValidRequest(event, headers, ...args)) return;
+      const {handleId} = headers;
+      this.send(`${channel}-${handleId}`, await listener(...args));
     };
     this.handleMap.set(channel, func);
     this.ipc.on(channel, func);
@@ -90,10 +100,15 @@ export default class IPC {
           `Attempted to register a second handler for '${channel}'`
       );
     }
-    const func = async (event: IpcEvent, handleId: any, ...args: any[]) => {
-      if (!this.isValidRequest(event, handleId, ...args)) return;
+    const func = async (
+        event: IpcEvent,
+        headers: IpcHeaders,
+        ...args: any[]
+    ) => {
+      if (!this.isValidRequest(event, headers, ...args)) return;
       this.removeHandler(channel);
-      this.emit(`${channel}-${handleId}`, handleId, await listener(...args));
+      const {handleId} = headers;
+      this.send(`${channel}-${handleId}`, await listener(...args));
     };
     this.handleMap.set(channel, func);
     this.ipc.once(channel, func);
@@ -103,7 +118,7 @@ export default class IPC {
     return new Promise(resolve => {
       const handleId = uuid.v4();
       this.once(`${channel}-${handleId}`, resolve);
-      this.emit(channel, handleId, ...args);
+      this.emit(channel, {handleId}, ...args);
     });
   }
 
