@@ -74,7 +74,7 @@ export class PluginContext {
    * @param listener
    */
   public onPressUp(listener: (response: {pressDuration: number}) => void): this {
-    this.ipc.on('pressDown', (event, response) => listener(response));
+    this.ipc.on('pressUp', (event, response) => listener(response));
     return this;
   }
 
