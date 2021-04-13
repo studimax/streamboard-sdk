@@ -2,7 +2,7 @@
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "module": "commonjs",
-    "target": "esNext",
+    "target": "es2020",
     "sourceMap": false,
     "esModuleInterop": true,
     "strict": true,

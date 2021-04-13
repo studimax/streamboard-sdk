@@ -49,7 +49,7 @@ The plugin need a valid package.json with this minimum configuration:
     }
   },
   "engines": {
-    "node": "14.16.0"
+    "node": ">=14.16.0"
   }
 }
 ```

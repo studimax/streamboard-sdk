@@ -1,2 +1,1 @@
-describe('StreamBoard SDK', () => {
-});
+describe('StreamBoard SDK', () => {});
