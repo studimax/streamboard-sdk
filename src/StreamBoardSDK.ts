@@ -1,13 +1,24 @@
+import EventEmitter from 'events';
+import {InputsForms} from './InputForm';
 import {PluginContext} from './PluginContext';
 import {ipcRenderer} from 'electron-path-ipc';
 
 export default class StreamBoardSDK {
+  private readonly event = new EventEmitter();
   private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
   private readonly identifier = new URL(location.toString()).searchParams.get('identifier') ?? '';
   private readonly ipc = ipcRenderer.prefix(this.identifier);
+  private readonly configForms = new Map<string, () => InputsForms>();
 
   constructor() {
-    this.ipc.once('stop', () => this.stop());
+    this.ipc
+      .once('stop', () => this.stop())
+      .on('initContext', (header, uuid: string, action: string, config: any) => {
+        const context = new PluginContext(this, uuid, action, config, this.ipc);
+        this.contexts.set(uuid, context);
+        this.event.emit('context', context);
+      })
+      .handle('configForm', (header, action: string) => this.getConfigForm(action));
   }
 
   /**
@@ -21,12 +32,8 @@ export default class StreamBoardSDK {
    * Is executed when a new context is added on StreamBoard, the context instance is returned.
    * @param listener
    */
-  public onConnection(listener: (context: PluginContext) => void): this {
-    this.ipc.on('initContext', (header, uuid: string, action: string, config: any) => {
-      const context = new PluginContext(this, uuid, action, config, this.ipc);
-      this.contexts.set(uuid, context);
-      listener(context);
-    });
+  public onContext(listener: (context: PluginContext) => void): this {
+    this.event.on('context', listener);
     return this;
   }
 
@@ -45,6 +52,7 @@ export default class StreamBoardSDK {
   public stop(): this {
     this.contexts.forEach((value, key) => this.removeContext(key));
     this.ipc.removeAll();
+    this.event.removeAllListeners();
     return this;
   }
 
@@ -52,5 +60,13 @@ export default class StreamBoardSDK {
     if (await this.contexts.get(ctx)?.stop()) {
       this.contexts.delete(ctx);
     }
+  }
+
+  public setConfigForm(action: string, listener: () => InputsForms) {
+    this.configForms.set(action, listener);
+  }
+
+  public getConfigForm(action: string): InputsForms {
+    return this.configForms.get(action)?.apply(this) ?? [];
   }
 }

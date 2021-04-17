@@ -1,4 +1,5 @@
 import {Ipc, ipcRenderer} from 'electron-path-ipc';
+import EventEmitter from 'events';
 import StreamBoardSDK from './StreamBoardSDK';
 
 export class PluginContext {
@@ -6,31 +7,39 @@ export class PluginContext {
    * cache is a free variable could be use to store data in context
    */
   public readonly cache: {[key: string]: any} = {};
+  private readonly event = new EventEmitter();
   private readonly ipc: Ipc;
   private stopped?: Promise<boolean>;
+  private readonly config = new Map<string, any>();
 
   constructor(
     public readonly parent: StreamBoardSDK,
     public readonly uuid: string,
     public readonly action: string,
-    public readonly config: any,
+    config: {[key: string]: any},
     ipc: Ipc = ipcRenderer
   ) {
+    this.parent.getConfigForm(action).forEach(({action, value}) => {
+      this.config.set(action, config[action] ?? value);
+    });
     this.ipc = ipc.prefix(uuid);
     this.ipc.once('stop', () => this.stop());
+    this.ipc.on('settings', (event, response) => {
+      this.setConfig(response);
+      this.event.emit('settings', this.getConfig());
+    });
   }
 
-  public getSettings(): Promise<any> {
-    return this.ipc.invoke('getSettings');
+  public getConfig<T = {[key: string]: any}>(): T {
+    return Object.fromEntries(this.config) as T;
   }
 
-  /**
-   * Send a request to set the context's settings
-   * @param value
-   */
-  public setSettings(value: any): this {
-    this.ipc.send('setSettings', value);
-    return this;
+  public setConfig<T = {[key: string]: any}>(config: T): void {
+    for (const configKey in config) {
+      if (this.config.has(configKey)) {
+        this.config.set(configKey, config[configKey]);
+      }
+    }
   }
 
   /**
@@ -61,6 +70,16 @@ export class PluginContext {
   }
 
   /**
+   * Send a request to send something
+   * @param path
+   * @param value
+   */
+  public send(path: string, value: string): this {
+    this.ipc.send(path, value);
+    return this;
+  }
+
+  /**
    * Listens to pressDown event, when a event arrives listener would be called with listener.
    * @param listener
    */
@@ -79,18 +98,38 @@ export class PluginContext {
   }
 
   /**
+   * Listens to on event, when a event arrives listener would be called with listener.
+   * @param path
+   * @param listener
+   */
+  public on(path: string, listener: (response: any) => void): this {
+    this.ipc.on(path, (event, response) => listener(response));
+    return this;
+  }
+
+  /**
+   * Listens to once event, when a event arrives listener would be called with listener.
+   * @param path
+   * @param listener
+   */
+  public once(path: string, listener: (response: any) => void): this {
+    this.ipc.once(path, (event, response) => listener(response));
+    return this;
+  }
+
+  /**
    * Listens to onSettings event, when a event arrives listener would be called with listener.
    * @param listener
    */
-  public onSettings(listener: (response: any) => any): this {
-    this.ipc.on('settings', (event, response) => listener(response));
+  public onSettings(listener: (config: {[key: string]: any}) => void): this {
+    this.event.on('settings', listener);
     return this;
   }
 
   /**
    * Stop the context
    */
-  public stop(): Promise<boolean> {
+  public async stop(): Promise<boolean> {
     return this.stopped
       ? this.stopped
       : (this.stopped = this.ipc.invoke<boolean>('stop').then(response => {
