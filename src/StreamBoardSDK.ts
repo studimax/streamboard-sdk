@@ -18,7 +18,7 @@ export default class StreamBoardSDK {
         this.contexts.set(uuid, context);
         this.event.emit('context', context);
       })
-      .handle('configForm', (header, action: string) => this.getConfigForm(action));
+      .handle('configForm', async (header, action: string) => await this.getConfigForm(action).export());
   }
 
   /**
@@ -62,8 +62,8 @@ export default class StreamBoardSDK {
     }
   }
 
-  public setConfigForm(action: string, configForm: ConfigForm) {
-    this.configForms.set(action, configForm);
+  public setConfigForm(action: string, ...forms: ConstructorParameters<typeof ConfigForm>) {
+    this.configForms.set(action, new ConfigForm(...forms));
   }
 
   public getConfigForm(action: string): Form {

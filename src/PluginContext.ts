@@ -29,7 +29,7 @@ export class PluginContext {
         this.config.setConfig(config);
         this.event.emit('settings', await this.getConfig());
       })
-      .handle('configForm', () => this.config.export());
+      .handle('configForm', async () => await this.config.export());
   }
 
   public setConfig(config: {[key: string]: any}) {
