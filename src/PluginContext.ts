@@ -20,7 +20,7 @@ export class PluginContext {
     ipc: Ipc = ipcRenderer
   ) {
     this.parent.getConfigForm(action).forEach(({action, value}) => {
-      this.config.set(action, config[action] ?? value);
+      this.config.set(action, (config ?? {})[action] ?? value);
     });
     this.ipc = ipc.prefix(uuid);
     this.ipc.once('stop', () => this.stop());
