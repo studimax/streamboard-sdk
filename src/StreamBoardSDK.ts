@@ -1,5 +1,5 @@
+import {ConfigForm, Form} from './InputForm';
 import EventEmitter from 'events';
-import {InputsForms} from './InputForm';
 import {PluginContext} from './PluginContext';
 import {ipcRenderer} from 'electron-path-ipc';
 
@@ -8,7 +8,7 @@ export default class StreamBoardSDK {
   private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
   private readonly identifier = new URL(location.toString()).searchParams.get('identifier') ?? '';
   private readonly ipc = ipcRenderer.prefix(this.identifier);
-  private readonly configForms = new Map<string, () => InputsForms>();
+  private readonly configForms = new Map<string, ConfigForm>();
 
   constructor() {
     this.ipc
@@ -62,11 +62,11 @@ export default class StreamBoardSDK {
     }
   }
 
-  public setConfigForm(action: string, listener: () => InputsForms) {
-    this.configForms.set(action, listener);
+  public setConfigForm(action: string, configForm: ConfigForm) {
+    this.configForms.set(action, configForm);
   }
 
-  public getConfigForm(action: string): InputsForms {
-    return this.configForms.get(action)?.apply(this) ?? [];
+  public getConfigForm(action: string): Form {
+    return this.configForms.get(action)?.getForm() ?? new Form();
   }
 }

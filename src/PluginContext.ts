@@ -1,5 +1,6 @@
 import {Ipc, ipcRenderer} from 'electron-path-ipc';
 import EventEmitter from 'events';
+import {Form} from './InputForm';
 import StreamBoardSDK from './StreamBoardSDK';
 
 export class PluginContext {
@@ -10,7 +11,7 @@ export class PluginContext {
   private readonly event = new EventEmitter();
   private readonly ipc: Ipc;
   private stopped?: Promise<boolean>;
-  private readonly config = new Map<string, any>();
+  private readonly config: Form;
 
   constructor(
     public readonly parent: StreamBoardSDK,
@@ -19,27 +20,24 @@ export class PluginContext {
     config: {[key: string]: any},
     ipc: Ipc = ipcRenderer
   ) {
-    this.parent.getConfigForm(action).forEach(({action, value}) => {
-      this.config.set(action, (config ?? {})[action] ?? value);
-    });
-    this.ipc = ipc.prefix(uuid);
-    this.ipc.once('stop', () => this.stop());
-    this.ipc.on('settings', (event, response) => {
-      this.setConfig(response);
-      this.event.emit('settings', this.getConfig());
-    });
+    this.config = this.parent.getConfigForm(action);
+    this.config.setConfig(config);
+    this.ipc = ipc
+      .prefix(uuid)
+      .once('stop', () => this.stop())
+      .on('settings', async (event, config) => {
+        this.config.setConfig(config);
+        this.event.emit('settings', await this.getConfig());
+      })
+      .handle('configForm', () => this.config.export());
   }
 
-  public getConfig<T = {[key: string]: any}>(): T {
-    return Object.fromEntries(this.config) as T;
+  public setConfig(config: {[key: string]: any}) {
+    this.config.setConfig(config);
   }
 
-  public setConfig<T = {[key: string]: any}>(config: T): void {
-    for (const configKey in config) {
-      if (this.config.has(configKey)) {
-        this.config.set(configKey, config[configKey]);
-      }
-    }
+  public getConfig<T = {[key: string]: any}>(): Promise<T> {
+    return this.config.getConfig() as Promise<T>;
   }
 
   /**
