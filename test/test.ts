@@ -1,4 +1,4 @@
-import {ConfigForm} from '../src';
+import {ConfigForm} from '../src/';
 
 (async () => {
   console.log('test1');
@@ -6,7 +6,8 @@ import {ConfigForm} from '../src';
     {type: 'input_text', action: 'test1', default: () => 'caca'},
     {type: 'input_checkbox', action: 'test2', default: () => true},
     {type: 'input_checkbox', action: 'test3'},
-    {type: 'input_select', action: 'test4', items: () => [{value: 'caca', label: 'Caca'}]},
+    {type: 'input_file', action: 'test4', accept: '.mp3,audio/*', default: () => 'pipi'},
+    {type: 'input_select', action: 'test5', items: () => [{value: 'caca', label: 'Caca'}]},
   ]);
   const form = test.getForm();
   form.getAction('test')?.setValue('yolo');

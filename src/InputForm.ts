@@ -8,6 +8,10 @@ type InputSelectOption<T = any> = InputOption<T> & {
   items?: () => {label: string; value: T}[] | Promise<{label: string; value: T}[]>;
 };
 
+type InputFileOption<T = any> = InputOption<T> & {
+  accept?: string;
+};
+
 abstract class Input<T = any> {
   public static readonly type: string = 'input';
   ['constructor']: typeof Input;
@@ -49,6 +53,21 @@ class InputText extends Input<string> {
   }
 }
 
+class InputFile extends Input<string> {
+  public static readonly type: string = 'input_file';
+  private readonly accept?: string;
+  constructor(options: InputFileOption<string>) {
+    super(options);
+    this.accept = options.accept;
+  }
+  async export(): Promise<{[key: string]: any}> {
+    return {
+      ...(await super.export()),
+      accept: this.accept,
+    };
+  }
+}
+
 class InputTextArea extends Input<string> {
   public static readonly type: string = 'input_textarea';
   constructor(options: InputOption<string>) {
@@ -80,6 +99,7 @@ class InputSelect<T = any> extends Input<T> {
 
 type Inputs =
   | ({type: 'input_text'} & ConstructorParameters<typeof InputText>[0])
+  | ({type: 'input_file'} & ConstructorParameters<typeof InputFile>[0])
   | ({type: 'input_textarea'} & ConstructorParameters<typeof InputTextArea>[0])
   | ({type: 'input_checkbox'} & ConstructorParameters<typeof InputCheckbox>[0])
   | ({type: 'input_select'} & ConstructorParameters<typeof InputSelect>[0]);
@@ -107,7 +127,13 @@ export class Form extends Array<Input> {
 }
 
 export class ConfigForm {
-  private static readonly inputClass = ConfigForm.addInputs(InputText, InputTextArea, InputCheckbox, InputSelect);
+  private static readonly inputClass = ConfigForm.addInputs(
+    InputText,
+    InputFile,
+    InputTextArea,
+    InputCheckbox,
+    InputSelect
+  );
   private readonly inputs: Inputs[];
   constructor(inputs: Inputs[]) {
     this.inputs = inputs.filter(input => ConfigForm.inputClass.has(input.type));
