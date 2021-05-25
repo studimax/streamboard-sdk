@@ -2,7 +2,6 @@ import {ConfigForm, Form} from './InputForm';
 import EventEmitter from 'events';
 import {PluginContext} from './PluginContext';
 import {ipcRenderer} from 'electron-path-ipc';
-
 export default class StreamBoardSDK {
   private readonly event = new EventEmitter();
   private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
@@ -32,8 +31,21 @@ export default class StreamBoardSDK {
    * Is executed when a new context is added on StreamBoard, the context instance is returned.
    * @param listener
    */
-  public onContext(listener: (context: PluginContext) => void): this {
-    this.event.on('context', listener);
+  public onContext(listener: (context: PluginContext) => void): this;
+  /**
+   * Is executed when a new context with action is added on StreamBoard, the context instance is returned.
+   * @param action
+   * @param listener
+   */
+  public onContext(action: string, listener: (context: PluginContext) => void): this;
+
+  public onContext(arg1: string | ((context: PluginContext) => void), arg2?: (context: PluginContext) => void): this {
+    const action = typeof arg1 === 'string' ? arg1 : false;
+    const listener = arg2 ?? arg1;
+    if (!(listener instanceof Function)) return this;
+    this.event.on('context', (context: PluginContext) => {
+      if (!action || context.action === action) listener(context);
+    });
     return this;
   }
 
