@@ -28,6 +28,6 @@ import StreamBoardSDK from '../src/';
   console.log(await form.getConfig());
   console.log(await form.export());
 
-  sdk.onContext('test', () => {});
+  sdk.onContext('test', (context, config) => {});
   sdk.onContext(() => {});
 })();

@@ -14,10 +14,10 @@ export default class StreamBoardSDK {
   constructor() {
     this.ipc
       .once('stop', () => this.stop())
-      .on('initContext', (header, uuid: string, action: string, config: any) => {
+      .on('initContext', async (header, uuid: string, action: string, config: any) => {
         const context = new PluginContext(this, uuid, action, config, this.ipc);
         this.contexts.set(uuid, context);
-        this.event.emit('context', context);
+        this.event.emit('context', context, await context.getConfig());
       })
       .on('settings', async (event, config) => {
         this.globalConfig.setConfig(config);
@@ -38,20 +38,23 @@ export default class StreamBoardSDK {
    * Is executed when a new context is added on StreamBoard, the context instance is returned.
    * @param listener
    */
-  public onContext(listener: (context: PluginContext) => void): this;
+  public onContext(listener: (context: PluginContext, config: {[key: string]: any}) => void): this;
   /**
    * Is executed when a new context with action is added on StreamBoard, the context instance is returned.
    * @param action
    * @param listener
    */
-  public onContext(action: string, listener: (context: PluginContext) => void): this;
+  public onContext(action: string, listener: (context: PluginContext, config: {[key: string]: any}) => void): this;
 
-  public onContext(arg1: string | ((context: PluginContext) => void), arg2?: (context: PluginContext) => void): this {
+  public onContext(
+    arg1: string | ((context: PluginContext, config: {[key: string]: any}) => void),
+    arg2?: (context: PluginContext, config: {[key: string]: any}) => void
+  ): this {
     const action = typeof arg1 === 'string' ? arg1 : false;
     const listener = arg2 ?? arg1;
     if (!(listener instanceof Function)) return this;
-    this.event.on('context', (context: PluginContext) => {
-      if (!action || context.action === action) listener(context);
+    this.event.on('context', (context: PluginContext, config: {[key: string]: any}) => {
+      if (!action || context.action === action) listener(context, config);
     });
     return this;
   }
