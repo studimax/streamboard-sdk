@@ -22,6 +22,7 @@ export class PluginContext {
   ) {
     this.config = this.parent.getActionConfig(action);
     this.config.setConfig(config);
+    console.log('PluginContext', this.config, config, action);
     this.ipc = ipc
       .prefix(uuid)
       .once('stop', () => this.stop())
