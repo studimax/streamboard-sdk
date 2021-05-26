@@ -1,6 +1,7 @@
 type InputOption<T = any> = {
   action: string;
   label?: string;
+  value?: T;
   default?: () => T | Promise<T>;
 };
 
@@ -23,6 +24,7 @@ abstract class Input<T = any> {
   protected constructor(options: InputOption<T>) {
     this.action = options.action;
     this.label = options.label ?? '';
+    this.value = options.value;
     this.default = options.default ?? (() => (undefined as unknown) as T);
   }
 
@@ -134,15 +136,19 @@ export class ConfigForm {
     InputCheckbox,
     InputSelect
   );
-  private readonly inputs: Inputs[];
+  private inputs: Inputs[] = [];
   constructor(inputs: Inputs[]) {
-    this.inputs = inputs.filter(input => ConfigForm.inputClass.has(input.type));
+    this.setInputs(inputs);
   }
 
   private static addInputs(...input: any[]) {
     const inputClass = new Map<string, new (options: Inputs) => Input>();
     input.forEach(input => inputClass.set(input.type, input));
     return inputClass;
+  }
+
+  public setInputs(inputs: Inputs[]) {
+    this.inputs = inputs.filter(input => ConfigForm.inputClass.has(input.type));
   }
 
   public getForm(): Form {

@@ -7,7 +7,9 @@ export default class StreamBoardSDK {
   private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
   private readonly identifier = new URL(location.toString()).searchParams.get('identifier') ?? '';
   private readonly ipc = ipcRenderer.prefix(this.identifier);
-  private readonly configForms = new Map<string, ConfigForm>();
+  private readonly actionConfigForms = new Map<string, ConfigForm>();
+  private readonly globalConfigForm = new ConfigForm([]);
+  private globalConfig = new Form();
 
   constructor() {
     this.ipc
@@ -17,7 +19,12 @@ export default class StreamBoardSDK {
         this.contexts.set(uuid, context);
         this.event.emit('context', context);
       })
-      .handle('configForm', async (header, action: string) => await this.getConfigForm(action).export());
+      .on('settings', async (event, config) => {
+        this.globalConfig.setConfig(config);
+        this.event.emit('settings', await this.globalConfig.getConfig());
+      })
+      .handle('configForm', async () => await this.globalConfig.export())
+      .handle('actionConfigForm', async (header, action: string) => await this.getActionConfig(action).export());
   }
 
   /**
@@ -48,6 +55,14 @@ export default class StreamBoardSDK {
     });
     return this;
   }
+  /**
+   * Listens to onSettings event, when a event arrives listener would be called with listener.
+   * @param listener
+   */
+  public onSettings(listener: (config: {[key: string]: any}) => void): this {
+    this.event.on('settings', listener);
+    return this;
+  }
 
   /**
    * Return the list of all context can be filtered by action
@@ -74,11 +89,25 @@ export default class StreamBoardSDK {
     }
   }
 
-  public setConfigForm(action: string, ...forms: ConstructorParameters<typeof ConfigForm>) {
-    this.configForms.set(action, new ConfigForm(...forms));
+  public setActionConfig(action: string, ...inputs: ConstructorParameters<typeof ConfigForm>) {
+    const form = this.actionConfigForms.get(action);
+    if (form) {
+      form.setInputs(...inputs);
+    } else {
+      this.actionConfigForms.set(action, new ConfigForm(...inputs));
+    }
   }
 
-  public getConfigForm(action: string): Form {
-    return this.configForms.get(action)?.getForm() ?? new Form();
+  public getActionConfig(action: string): Form {
+    return this.actionConfigForms.get(action)?.getForm() ?? new Form();
+  }
+
+  public setGlobalConfig(...forms: ConstructorParameters<typeof ConfigForm>) {
+    this.globalConfigForm.setInputs(...forms);
+    this.globalConfig = this.globalConfigForm.getForm();
+  }
+
+  public getGlobalConfig(): Form {
+    return this.globalConfig;
   }
 }

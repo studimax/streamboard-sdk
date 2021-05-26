@@ -20,7 +20,7 @@ export class PluginContext {
     config: {[key: string]: any},
     ipc: Ipc = ipcRenderer
   ) {
-    this.config = this.parent.getConfigForm(action);
+    this.config = this.parent.getActionConfig(action);
     this.config.setConfig(config);
     this.ipc = ipc
       .prefix(uuid)
@@ -95,6 +95,11 @@ export class PluginContext {
     return this;
   }
 
+  public onStop(listener: () => void): this {
+    this.event.on('stop', listener);
+    return this;
+  }
+
   /**
    * Listens to on event, when a event arrives listener would be called with listener.
    * @param path
@@ -132,6 +137,7 @@ export class PluginContext {
       ? this.stopped
       : (this.stopped = this.ipc.invoke<boolean>('stop').then(response => {
           if (response) {
+            this.event.emit('stop');
             this.ipc.removeAll();
             this.parent.removeContext(this.uuid);
           }
