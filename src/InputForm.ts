@@ -1,8 +1,8 @@
 type InputOption<T = any> = {
-  action: string;
+  key: string;
   label?: string;
   value?: T;
-  default?: () => T | Promise<T>;
+  default?: T | (() => T | Promise<T>);
 };
 
 type InputSelectOption<T = any> = InputOption<T> & {
@@ -16,20 +16,28 @@ type InputFileOption<T = any> = InputOption<T> & {
 abstract class Input<T = any> {
   public static readonly type: string = 'input';
   ['constructor']: typeof Input;
-  public readonly action: string;
+  public readonly key: string;
   public readonly label: string;
-  private readonly default: () => Promise<T> | T;
+  private readonly default: T | (() => Promise<T> | T);
   private value?: T;
 
   protected constructor(options: InputOption<T>) {
-    this.action = options.action;
+    this.key = options.key;
     this.label = options.label ?? '';
     this.value = options.value;
     this.default = options.default ?? (() => (undefined as unknown) as T);
   }
 
-  public async getValue() {
-    return this.value ?? (await this.default());
+  public getDefaultValue(): T | Promise<T> {
+    return this.default instanceof Function ? this.default() : this.default;
+  }
+
+  public getValue(): T | undefined {
+    return this.value;
+  }
+
+  public get(): Promise<T> | T {
+    return this.getValue() ?? this.getDefaultValue();
   }
 
   public setValue(value: T) {
@@ -37,10 +45,10 @@ abstract class Input<T = any> {
   }
 
   async export(): Promise<{[key: string]: any}> {
-    const defaultValue = await this.default();
+    const defaultValue = await this.getDefaultValue();
     return {
       type: this.constructor.type,
-      action: this.action,
+      key: this.key,
       label: this.label,
       value: this.value ?? defaultValue,
       default: defaultValue,
@@ -50,6 +58,7 @@ abstract class Input<T = any> {
 
 class InputText extends Input<string> {
   public static readonly type: string = 'input_text';
+
   constructor(options: InputOption<string>) {
     super({...options, default: options.default ?? (() => '')});
   }
@@ -58,10 +67,12 @@ class InputText extends Input<string> {
 class InputFile extends Input<string> {
   public static readonly type: string = 'input_file';
   private readonly accept?: string;
+
   constructor(options: InputFileOption<string>) {
     super(options);
     this.accept = options.accept;
   }
+
   async export(): Promise<{[key: string]: any}> {
     return {
       ...(await super.export()),
@@ -72,6 +83,7 @@ class InputFile extends Input<string> {
 
 class InputTextArea extends Input<string> {
   public static readonly type: string = 'input_textarea';
+
   constructor(options: InputOption<string>) {
     super({...options, default: options.default ?? (() => '')});
   }
@@ -79,6 +91,7 @@ class InputTextArea extends Input<string> {
 
 class InputCheckbox extends Input<boolean> {
   public static readonly type: string = 'input_checkbox';
+
   constructor(options: InputOption<boolean>) {
     super({...options, default: options.default ?? (() => false)});
   }
@@ -87,10 +100,12 @@ class InputCheckbox extends Input<boolean> {
 class InputSelect<T = any> extends Input<T> {
   public static readonly type: string = 'input_select';
   private readonly items: () => {label: string; value: T}[] | Promise<{label: string; value: T}[]>;
+
   constructor(options: InputSelectOption<T>) {
     super(options);
     this.items = options.items ?? (() => []);
   }
+
   async export(): Promise<{[key: string]: any}> {
     return {
       ...(await super.export()),
@@ -107,24 +122,32 @@ type Inputs =
   | ({type: 'input_select'} & ConstructorParameters<typeof InputSelect>[0]);
 
 export class Form extends Array<Input> {
-  public getAction<T = any, U extends Input<T> = Input<T>>(action: string): U | undefined {
-    return this.find(i => i.action === action) as U | undefined;
-  }
-
   public setConfig<T = {[key: string]: any}>(config: T): void {
-    for (const key in config) {
-      this.getAction(key)?.setValue(config[key]);
-    }
+    Object.entries(config).forEach(([key, value]) => {
+      this.set(key, value);
+    });
   }
 
-  public async getConfig(): Promise<{[key: string]: any}> {
-    return Object.fromEntries(
-      await Promise.all(Array.from(this).map(async input => [input.action, await input.getValue()]))
-    );
+  public async getConfig<T = {[key: string]: any}>(): Promise<T> {
+    return Object.fromEntries(await Promise.all(this.map(async input => [input.key, await input.get()])));
+  }
+
+  public get(key: string): any | undefined {
+    const input = this.getAction(key);
+    if (!input) return;
+    return input.get();
+  }
+
+  public set(key: string, value: any): void {
+    this.getAction(key)?.setValue(value);
   }
 
   public export(): Promise<{[key: string]: any}> {
     return Promise.all(Array.from(this).map(async input => await input.export()));
+  }
+
+  private getAction<T = any, U extends Input<T> = Input<T>>(key: string): U | undefined {
+    return this.find(i => i.key === key) as U | undefined;
   }
 }
 
@@ -137,6 +160,7 @@ export class ConfigForm {
     InputSelect
   );
   private inputs: Inputs[] = [];
+
   constructor(inputs: Inputs[]) {
     this.setInputs(inputs);
   }

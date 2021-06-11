@@ -2,10 +2,11 @@ import {ConfigForm, Form} from './InputForm';
 import EventEmitter from 'events';
 import {PluginContext} from './PluginContext';
 import {ipcRenderer} from 'electron-path-ipc';
+
 export default class StreamBoardSDK {
+  public readonly identifier = StreamBoardSDK.getIdentifier();
   private readonly event = new EventEmitter();
   private readonly contexts: Map<string, PluginContext> = new Map<string, PluginContext>();
-  private readonly identifier = new URL(location.toString()).searchParams.get('identifier') ?? '';
   private readonly ipc = ipcRenderer.prefix(this.identifier);
   private readonly actionConfigForms = new Map<string, ConfigForm>();
   private readonly globalConfigForm = new ConfigForm([]);
@@ -27,6 +28,14 @@ export default class StreamBoardSDK {
       .handle('actionConfigForm', async (header, action: string) => await this.getActionConfig(action).export());
   }
 
+  private static getIdentifier(): string {
+    try {
+      return new URL(location.toString()).searchParams.get('identifier') ?? '';
+    } catch (e) {
+      return '';
+    }
+  }
+
   /**
    * Send to the main process that the plugin is ready
    */
@@ -39,6 +48,7 @@ export default class StreamBoardSDK {
    * @param listener
    */
   public onContext(listener: (context: PluginContext, config: {[key: string]: any}) => void): this;
+
   /**
    * Is executed when a new context with action is added on StreamBoard, the context instance is returned.
    * @param action
@@ -58,6 +68,7 @@ export default class StreamBoardSDK {
     });
     return this;
   }
+
   /**
    * Listens to onSettings event, when a event arrives listener would be called with listener.
    * @param listener
@@ -86,13 +97,22 @@ export default class StreamBoardSDK {
     return this;
   }
 
+  /**
+   * Remove specific context from the context's list
+   * @param ctx
+   */
   public async removeContext(ctx: string): Promise<void> {
     if (await this.contexts.get(ctx)?.stop()) {
       this.contexts.delete(ctx);
     }
   }
 
-  public setActionConfig(action: string, ...inputs: ConstructorParameters<typeof ConfigForm>) {
+  /**
+   * Set specific action's settings
+   * @param action
+   * @param inputs
+   */
+  public setActionConfig(action: string, ...inputs: ConstructorParameters<typeof ConfigForm>): void {
     const form = this.actionConfigForms.get(action);
     if (form) {
       form.setInputs(...inputs);
@@ -101,16 +121,31 @@ export default class StreamBoardSDK {
     }
   }
 
-  public getActionConfig(action: string): Form {
-    return this.actionConfigForms.get(action)?.getForm() ?? new Form();
+  /**
+   * Get action's config
+   * @param key
+   */
+  public getActionConfig(key: string): Form {
+    return this.actionConfigForms.get(key)?.getForm() ?? new Form();
   }
 
-  public setGlobalConfig(...forms: ConstructorParameters<typeof ConfigForm>) {
+  /**
+   * Set global config
+   * @param forms
+   */
+  public setGlobalConfig(...forms: ConstructorParameters<typeof ConfigForm>): void {
     this.globalConfigForm.setInputs(...forms);
     this.globalConfig = this.globalConfigForm.getForm();
   }
 
+  /**
+   * Get global config
+   */
   public getGlobalConfig(): Form {
     return this.globalConfig;
+  }
+
+  public removeAllListeners() {
+    this.event.removeAllListeners();
   }
 }

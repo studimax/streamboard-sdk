@@ -11,22 +11,25 @@
     "compile": "tsc",
     "fix": "gts fix **/*.ts",
     "test": "nyc mocha",
-    "pretest": "npm.cmd run compile",
-    "posttest": "npm.cmd run lint"
+    "pretest": "yarn run compile"
   },
   "devDependencies": {
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.1",
     "@types/node": "^14.14.22",
+    "@types/proxyquire": "^1.3.28",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.14.0",
     "@typescript-eslint/parser": "^4.14.0",
     "chai": "^4.3.0",
     "electron": "^12.0.1",
+    "electron-mock-ipc": "^0.3.9",
     "eslint": "^7.18.0",
+    "eslint-plugin-node": "^11.1.0",
     "gts": "^3.1.0",
     "mocha": "^8.3.0",
     "nyc": "^15.1.0",
+    "proxyquire": "^2.1.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
   },

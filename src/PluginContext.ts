@@ -1,4 +1,4 @@
-import {Ipc, ipcRenderer} from 'electron-path-ipc';
+import {Ipc} from 'electron-path-ipc';
 import EventEmitter from 'events';
 import {Form} from './InputForm';
 import StreamBoardSDK from './StreamBoardSDK';
@@ -18,11 +18,10 @@ export class PluginContext {
     public readonly uuid: string,
     public readonly action: string,
     config: {[key: string]: any},
-    ipc: Ipc = ipcRenderer
+    ipc: Ipc
   ) {
     this.config = this.parent.getActionConfig(action);
     this.config.setConfig(config);
-    console.log('PluginContext', this.config, config, action);
     this.ipc = ipc
       .prefix(uuid)
       .once('stop', () => this.stop())
@@ -37,8 +36,19 @@ export class PluginContext {
     this.config.setConfig(config);
   }
 
-  public getConfig<T = {[key: string]: any}>(): Promise<T> {
-    return this.config.getConfig() as Promise<T>;
+  /**
+   * Get full config object
+   */
+  public getConfig<T = {[key: string]: any}>(): Promise<T>;
+
+  /**
+   * Get a specific config key
+   * @param key
+   */
+  public getConfig<T = any>(key: string): T;
+
+  public getConfig(key?: string) {
+    return key ? this.config.get(key) : this.config.getConfig();
   }
 
   /**
@@ -96,13 +106,17 @@ export class PluginContext {
     return this;
   }
 
+  /**
+   * Listens to stop event, when a event arrives listener would be called with listener
+   * @param listener
+   */
   public onStop(listener: () => void): this {
     this.event.on('stop', listener);
     return this;
   }
 
   /**
-   * Listens to on event, when a event arrives listener would be called with listener.
+   * Listens to on ipc event, when a event arrives listener would be called with listener.
    * @param path
    * @param listener
    */
@@ -112,7 +126,7 @@ export class PluginContext {
   }
 
   /**
-   * Listens to once event, when a event arrives listener would be called with listener.
+   * Listens to once ipc event, when a event arrives listener would be called with listener.
    * @param path
    * @param listener
    */
