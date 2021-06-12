@@ -44,6 +44,16 @@ describe('Form', () => {
         },
       ]);
     });
+
+    it('test set config', async () => {
+      assert.ok(form.setConfig({text: 'text', checkbox: true, nothing: null}));
+      assert.deepStrictEqual(await form.getConfig(), {text: 'text', checkbox: true});
+    });
+
+    it('test set config with null value', async () => {
+      assert.ok(!form.setConfig(null));
+      assert.deepStrictEqual(await form.getConfig(), {text: 'text', checkbox: true});
+    });
   });
   describe('basic async config', () => {
     const config = new ConfigForm([

@@ -122,10 +122,15 @@ type Inputs =
   | ({type: 'input_select'} & ConstructorParameters<typeof InputSelect>[0]);
 
 export class Form extends Array<Input> {
-  public setConfig<T = {[key: string]: any}>(config: T): void {
-    Object.entries(config).forEach(([key, value]) => {
-      this.set(key, value);
-    });
+  public setConfig<T = {[key: string]: any}>(config: T): boolean {
+    try {
+      Object.entries(config).forEach(([key, value]) => {
+        this.set(key, value);
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   public async getConfig<T = {[key: string]: any}>(): Promise<T> {
