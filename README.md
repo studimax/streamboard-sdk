@@ -28,7 +28,7 @@ import StreamBoardSDK from "stremboard-sdk";
 const sdk = new StreamBoardSDK();
 
 sdk.setActionConfig('myaction', [
-  { type: 'input_text', action: 'world', default: () => 'World' },
+  { type: 'input_text', key: 'world', default: () => 'World' },
 ]);
 
 sdk.onContext('myaction', context => {
@@ -133,18 +133,8 @@ context.onStop(() => {
 Got this event when the context's config changed.
 
 ```js
-context.onSettings((config) => {
-  console.log('stop');
-})
-```
-
-#### onSettings
-
-Got this event when the context's config changed.
-
-```js
-context.onSettings((config) => {
-  console.log('stop');
+context.onSettings(config => {
+  console.log(config);
 })
 ```
 

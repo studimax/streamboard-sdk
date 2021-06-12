@@ -152,9 +152,10 @@ export class PluginContext {
       ? this.stopped
       : (this.stopped = this.ipc.invoke<boolean>('stop').then(response => {
           if (response) {
-            this.event.emit('stop');
             this.ipc.removeAll();
-            this.parent.removeContext(this.uuid);
+            this.parent.removeContext(this.uuid).then(() => {
+              this.event.emit('stop');
+            });
           }
           return response;
         }));

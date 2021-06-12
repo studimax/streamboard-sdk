@@ -7,19 +7,25 @@ describe('Form', () => {
       {type: 'input_text', key: 'text', default: 'default-value', label: 'label1'},
       {type: 'input_checkbox', key: 'checkbox', default: false, label: 'label2'},
     ]);
+
     const form = config.getForm();
+
     it('length', () => {
       assert.strictEqual(form.length, 2);
     });
+
     it('test text', () => {
       assert.strictEqual(form.get('text'), 'default-value');
     });
+
     it('test checkbox', () => {
       assert.strictEqual(form.get('checkbox'), false);
     });
+
     it('test get config', async () => {
       assert.deepStrictEqual(await form.getConfig(), {text: 'default-value', checkbox: false});
     });
+
     it('test export', async () => {
       assert.deepStrictEqual(await form.export(), [
         {
@@ -60,19 +66,25 @@ describe('Form', () => {
           }),
       },
     ]);
+
     const form = config.getForm();
+
     it('length', () => {
       assert.strictEqual(form.length, 2);
     });
+
     it('test text', async () => {
       assert.strictEqual(await form.get('text'), 'default-value');
     });
+
     it('test checkbox', async () => {
       assert.strictEqual(await form.get('checkbox'), false);
     });
+
     it('test get config', async () => {
       assert.deepStrictEqual(await form.getConfig(), {text: 'default-value', checkbox: false});
     });
+
     it('test export', async () => {
       assert.deepStrictEqual(await form.export(), [
         {
