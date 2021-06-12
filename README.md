@@ -10,7 +10,7 @@ This project is the **official** SDK for the Stream Board project.
 
 The SDK is helpful to develop some plugins as easy as possible and as fast as possible.
 
-# Installation
+## Installation
 
 ```bash
 $ npm install streamboard-sdk
