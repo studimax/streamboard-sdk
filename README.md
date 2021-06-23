@@ -1,4 +1,7 @@
-# Stream Board SDK
+<p align="center" style="margin: 0">
+  <a href="https://stream-board.app/" target="blank"><img src="https://stream-board.app/logo.svg" width="175" alt="StreamBoard Logo" /></a>
+</p>
+<h1 align="center" style="margin-top: 0">Stream Board SDK</h1>
 
 ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/studimax/streamboard-sdk/CodeQL)
 [![npm](https://img.shields.io/npm/v/streamboard-sdk)](https://www.npmjs.com/package/streamboard-sdk)
