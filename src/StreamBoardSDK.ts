@@ -1,7 +1,7 @@
 import {ConfigForm, Form} from './InputForm';
+import {PrefixedIpc, ipcRenderer} from 'electron-path-ipc';
 import EventEmitter from 'events';
 import {PluginContext} from './PluginContext';
-import {ipcRenderer} from 'electron-path-ipc';
 
 export default class StreamBoardSDK {
   public readonly identifier = StreamBoardSDK.getIdentifier();
@@ -11,6 +11,7 @@ export default class StreamBoardSDK {
   private readonly actionConfigForms = new Map<string, ConfigForm>();
   private readonly globalConfigForm = new ConfigForm([]);
   private globalConfig = new Form();
+  private readonly urlIpc: PrefixedIpc;
 
   constructor() {
     this.ipc
@@ -26,6 +27,7 @@ export default class StreamBoardSDK {
       })
       .handle('configForm', async () => await this.globalConfig.export())
       .handle('actionConfigForm', async (header, action: string) => await this.getActionConfig(action).export());
+    this.urlIpc = this.ipc.prefix('url');
   }
 
   private static getIdentifier(): string {
@@ -41,6 +43,17 @@ export default class StreamBoardSDK {
    */
   public async ready(): Promise<boolean> {
     return await this.ipc.invoke<boolean>('ready');
+  }
+
+  /**
+   * Is executed when an url is executed.
+   * @param path
+   * @param listener
+   */
+  public onUrl(path: string, listener: (params: {[key: string]: string}, data: {[key: string]: string}) => void) {
+    this.urlIpc.on(path, (header, params) => {
+      listener(params, header.params);
+    });
   }
 
   /**

@@ -96,4 +96,15 @@ describe('Context test', () => {
       ipcMain.send('uuid3/stop');
     });
   });
+
+  describe('url', () => {
+    it('test1', done => {
+      sdk.onUrl('test/:id', (params, data) => {
+        assert.strictEqual(data.id, '1');
+        assert.strictEqual(params.hello, 'world');
+        done();
+      });
+      ipcMain.send('url/test/1', {hello: 'world'});
+    });
+  });
 });
